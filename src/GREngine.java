@@ -12,9 +12,14 @@ public class GREngine implements GRfNIRSClient.OnMessageListener, GRUnityServer.
   private GRPredictionManager predictionManager;
   private GRfNIRSClient fNIRSClient;
   private GRUnityServer unityServer;
+  private NeuracleLabelingTask taskClient;
+  private NeuracleLabelingTask eventClient;
+
+
   private GRHouseInformationBroadcaster houseInformationBroadcaster;
   private GRLogger logger;
   private PositionLogger psLogger;
+  public Timer tm;
   
   //.. sam's stuff
   private Hashtable<String, Road> roads; //.. hardcoded roads which determine, based on position, what turn is sent
@@ -27,10 +32,16 @@ public class GREngine implements GRfNIRSClient.OnMessageListener, GRUnityServer.
     this.brainMessageBoard = brainMessageBoard;
     this.unityMessageBoard = unityMessageBoard;
     this.glassMessageBoard = glassMessageBoard;
-
     this.predictionManager = new GRPredictionManager();
+    
+    //.. ways of sending and receiving messages
     this.fNIRSClient = new GRfNIRSClient(this, this.brainMessageBoard);
     this.unityServer = new GRUnityServer(this, this.unityMessageBoard);
+    this.eventClient = new NeuracleLabelingTask(1444);
+    this.taskClient = new NeuracleLabelingTask(1327);
+
+      
+    
     this.houseInformationBroadcaster = new GRHouseInformationBroadcaster(this.glassMessageBoard);
     this.logger = new GRLogger();
     this.psLogger = new PositionLogger();
@@ -42,13 +53,42 @@ public class GREngine implements GRfNIRSClient.OnMessageListener, GRUnityServer.
 
   public void start(){
     new Thread(this.fNIRSClient).start();
-    new Thread(this.unityServer).start();
-      
+    new Thread(this.unityServer).start();     
+    new Thread(this.eventClient).start();
+    new Thread(this.taskClient).start();
+
+    
     //.. if this is heatmap, then take picture every 5 seconds
     if (condition.equals("picture")) {
-        Timer tm = new Timer();
-        tm.schedule(new HeatMap(houseInformationBroadcaster), 0, 3000);
+       startTimer();
     }
+  }
+  
+  public void sendToEvent(String message) {
+      this.eventClient.setCurrentCondition((message));
+  }
+   public void sendToTask(String message) {
+      this.taskClient.setCurrentCondition((message));
+  } 
+  
+  public void close() {
+      this.unityServer.close();
+  }
+  public void openUnity() {
+    new Thread(this.unityServer).start();
+
+  }
+  
+  public void startTimer() {
+      tm = new Timer();
+      tm.schedule(new HeatMap(houseInformationBroadcaster), 0, 3000);
+  }
+  
+  public void cancelTimer() {
+      if (tm != null) {
+          tm.cancel();
+          tm.purge();
+      }
   }
   public void stop(){
     this.fNIRSClient.disconnect();
@@ -120,6 +160,11 @@ public class GREngine implements GRfNIRSClient.OnMessageListener, GRUnityServer.
                             this.houseInformationBroadcaster.broadcast(condition, xPos, zPos, turn.name());
                             this.unityMessageBoard.put("Attempted to send: " + message + ", condition: " 
                                     + roadId + ", averageOfBranchPredictions: " + averageWorkload);
+                            
+                            //.. and also send something to Neuracle, which is still collecting brain data we should analyze
+                            String []numTurns = turn.name().split("x");
+                            this.sendToTask("T"+numTurns.length);
+                            
                         }
                         else {
                             //this.unityMessageBoard.put("This direction ahs already been delivered");

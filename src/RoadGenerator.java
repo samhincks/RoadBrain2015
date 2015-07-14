@@ -22,15 +22,14 @@ public class RoadGenerator {
 		roadA2.directions.add(direction); 
 
 		ht.put("b", roadA2); 
-                
-                
-                
+                                
                 Road roadC = new Road("c"); 
-		direction = new Direction(Direction.Turn.Right, Direction.Turn.LeftxLeftxRight, 688, 20000.0f);
-		roadC.directions.add(direction); 
-                
-                direction = new Direction(Direction.Turn.Right, Direction.Turn.LeftxRightxRightxLeft, 1420, 19722.0f);
+                direction = new Direction(Direction.Turn.Right, Direction.Turn.Right, 1773, 19722.0f);
                roadC.directions.add(direction);
+               
+                direction = new Direction(Direction.Turn.LeftxRightxRightxLeft, Direction.Turn.LeftxRightxRightxLeft, 688, 20000.0f);
+                roadC.directions.add(direction);
+
 		ht.put("c", roadC); 
                 
                 return ht;

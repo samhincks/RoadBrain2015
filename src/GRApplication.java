@@ -1,9 +1,11 @@
 import java.awt.Button;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 
@@ -27,22 +29,93 @@ public class GRApplication{
     GRMessageBoard glassMessageBoard = new GRMessageBoard("Google Glass");
     engine = new GREngine(brainMessageBoard, desktopAppMessageBoard, glassMessageBoard);
     
-    
+   
     JFrame frame = new JFrame("RoadBrain");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.X_AXIS));
     frame.add(brainMessageBoard);
     frame.add(desktopAppMessageBoard);
     frame.add(glassMessageBoard);
-    Button b = new Button("write");
+    
+    JPanel buttonarea = new JPanel(new GridLayout(4, 5, 4, 4));
+
+    Button b = new Button("Save");
   
     b.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
               GRApplication.engine.write();
           }
       });
-    frame.add(b);   
+    buttonarea.add(b);  
+    
+    Button b2 = new Button("Heatmap");
+  
+    b2.addActionListener(new ActionListener() {
+          public void actionPerformed(ActionEvent e) {
+              GRApplication.engine.startTimer();
+              GRApplication.engine.session = new SamSessionInformation("HeatmapSession");
+              GRApplication.engine.close();
+              engine.sendToEvent("Heatmap");
+              GRApplication.engine.openUnity();
+          }
+      });
+    buttonarea.add(b2);   
+    
+    Button b3 = new Button("Roadbrain");
 
+    b3.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            //.. reset unity logs, change condition
+             GRApplication.engine.cancelTimer();
+             GRApplication.engine.session = new SamSessionInformation("RoadBrainSession");
+             GRApplication.engine.close();
+             engine.sendToEvent("Roadbrain");
+             GRApplication.engine.openUnity();
+        }
+    });
+    buttonarea.add(b3);
+    
+    AudioNBack nBack  = new AudioNBack(-1, 200000); //.. 5000 actually lasts 12 second
+       
+    Button b4 = new Button("0back");  
+    b4.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            try{
+                nBack.kBack = 0;
+                Thread t = new Thread(nBack);
+                t.start();
+                engine.sendToEvent("ZeroBack");
+            }
+            catch(Exception ex) {ex.printStackTrace();}
+        }  
+    });
+    buttonarea.add(b4);
+    
+    Button b6 = new Button("1back");
+    b6.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            try {
+                Thread t = new Thread(nBack);
+                t.start();
+                engine.sendToEvent("OneBack");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    });
+    buttonarea.add(b6);
+    
+    Button b5 = new Button("EndBack");
+    b5.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            nBack.interrupt(-1);   
+            engine.sendToEvent("EndBack");
+
+        }
+    });
+    buttonarea.add(b5);
+
+    frame.add(buttonarea);
     frame.pack();
     frame.setVisible(true);
     engine.condition = condition;

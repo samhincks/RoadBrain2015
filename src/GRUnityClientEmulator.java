@@ -9,7 +9,7 @@ import java.net.UnknownHostException;
 public class GRUnityClientEmulator implements Runnable{
 
   private static final String SERVER_IP = "127.0.0.1";
-  private static final int SERVER_PORT  = 50002;
+  private static final int SERVER_PORT  = 1327;
 
   private static final int INFORMATION_DELIVERY_INTERVAL_IN_MILLISEC = 1000; //suppose data is sent one per 4 [sec]
   private static final int CONDITION_CHEANGE_COUNT_MAX               = 20;
@@ -35,6 +35,7 @@ public class GRUnityClientEmulator implements Runnable{
         String xPos = getFakeXPos(index);
         String zPos = getFakeZPos(index);
         String message = condition + ";" + roadId + ";" + xPos + ";" + zPos;
+        message = "hard";
         out.println(message);
         System.out.println("--- GRUnityClientEmulator --- send: " + message);
         
