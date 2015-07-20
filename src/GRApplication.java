@@ -2,6 +2,8 @@ import java.awt.Button;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -23,6 +25,7 @@ import javax.swing.SwingUtilities;
 
 public class GRApplication{
   public static GREngine engine;
+  public static AudioNBack nBack;
   private static void createAndShowGUI(String condition, boolean breakDown){
     GRMessageBoard brainMessageBoard = new GRMessageBoard("Python Relay Server");
     GRMessageBoard desktopAppMessageBoard = new GRMessageBoard("Unity");
@@ -40,7 +43,6 @@ public class GRApplication{
     JPanel buttonarea = new JPanel(new GridLayout(4, 5, 4, 4));
 
     Button b = new Button("Save");
-  
     b.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
               GRApplication.engine.write();
@@ -48,35 +50,46 @@ public class GRApplication{
       });
     buttonarea.add(b);  
     
+    
+    //.. We click this button when we're ready to run heatmap
     Button b2 = new Button("Heatmap");
-  
     b2.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
-              GRApplication.engine.startTimer();
+              GRApplication.engine.startPictureTimer(); //.. start picture timer
               GRApplication.engine.session = new SamSessionInformation("HeatmapSession");
-              GRApplication.engine.close();
+              boolean closedIt = GRApplication.engine.closeUnity();
+              try {
+                  Thread.sleep(1500);
+              } catch (InterruptedException ex) {
+                  Logger.getLogger(GRApplication.class.getName()).log(Level.SEVERE, null, ex);
+              }
               engine.sendToEvent("Heatmap");
-              GRApplication.engine.openUnity();
+              if (closedIt) GRApplication.engine.openUnity();
           }
       });
     buttonarea.add(b2);   
-    
-    Button b3 = new Button("Roadbrain");
 
+    //.. when we're ready to run roadbrain
+    Button b3 = new Button("Roadbrain");
     b3.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             //.. reset unity logs, change condition
-             GRApplication.engine.cancelTimer();
+             GRApplication.engine.cancelPictureTimer();
              GRApplication.engine.session = new SamSessionInformation("RoadBrainSession");
-             GRApplication.engine.close();
+             boolean closedIt = GRApplication.engine.closeUnity();
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GRApplication.class.getName()).log(Level.SEVERE, null, ex);
+            }
              engine.sendToEvent("Roadbrain");
-             GRApplication.engine.openUnity();
+             if(closedIt) GRApplication.engine.openUnity();
         }
     });
     buttonarea.add(b3);
     
-    AudioNBack nBack  = new AudioNBack(-1, 200000); //.. 5000 actually lasts 12 second
-       
+    //.. to initialize a 0 back
+    reinitNBack();
     Button b4 = new Button("0back");  
     b4.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
@@ -95,6 +108,7 @@ public class GRApplication{
     b6.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             try {
+                nBack.kBack=1;
                 Thread t = new Thread(nBack);
                 t.start();
                 engine.sendToEvent("OneBack");
@@ -109,6 +123,7 @@ public class GRApplication{
     b5.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             nBack.interrupt(-1);   
+            reinitNBack();
             engine.sendToEvent("EndBack");
 
         }
@@ -123,6 +138,9 @@ public class GRApplication{
     engine.start();
   }
 
+  private static void reinitNBack() {
+      nBack = new AudioNBack(-1, 200000); //.. 5000 actually lasts 12 second
+  }
   public static void main(String[] args){
       if(args.length == 1) {
           createAndShowGUI(args[0], false);

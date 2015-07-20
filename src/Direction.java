@@ -2,7 +2,7 @@ public class Direction {
     public boolean delivered = false; //.. set to true when it has been delivered
     public static enum Turn {Left, Right, LeftxLeft, LeftxRight, RightxRight, 
         RightxLeft, LeftxLeftxLeft, LeftxLeftxRight, LeftxRightxLeft, LeftxRightxRight,
-        RightxLeftxLeft, RightxLeftxRight, RightxRightxLeft, RightxRightxRight, End, LeftxRightxLeftxRight, LeftxRightxRightxLeft}
+        RightxLeftxLeft, RightxLeftxRight, RightxRightxLeft, RightxRightxRight, End, LeftxRightxLeftxRight, LeftxRightxRightxLeft, RightxRightxStraight}
     public Turn easyTurn;
     public Turn hardTurn; 
     public float x; //.. when to trigger

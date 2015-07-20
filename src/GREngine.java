@@ -40,7 +40,6 @@ public class GREngine implements GRfNIRSClient.OnMessageListener, GRUnityServer.
     this.eventClient = new NeuracleLabelingTask(1444);
     this.taskClient = new NeuracleLabelingTask(1327);
 
-      
     
     this.houseInformationBroadcaster = new GRHouseInformationBroadcaster(this.glassMessageBoard);
     this.logger = new GRLogger();
@@ -60,7 +59,7 @@ public class GREngine implements GRfNIRSClient.OnMessageListener, GRUnityServer.
     
     //.. if this is heatmap, then take picture every 5 seconds
     if (condition.equals("picture")) {
-       startTimer();
+       startPictureTimer();
     }
   }
   
@@ -71,20 +70,19 @@ public class GREngine implements GRfNIRSClient.OnMessageListener, GRUnityServer.
       this.taskClient.setCurrentCondition((message));
   } 
   
-  public void close() {
-      this.unityServer.close();
+  public boolean closeUnity() {
+      return this.unityServer.close();
   }
   public void openUnity() {
     new Thread(this.unityServer).start();
-
   }
   
-  public void startTimer() {
+  public void startPictureTimer() {
       tm = new Timer();
       tm.schedule(new HeatMap(houseInformationBroadcaster), 0, 3000);
   }
   
-  public void cancelTimer() {
+  public void cancelPictureTimer() {
       if (tm != null) {
           tm.cancel();
           tm.purge();

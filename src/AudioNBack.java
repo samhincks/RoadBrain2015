@@ -119,7 +119,7 @@ public class AudioNBack implements Runnable{
                 }
                 if (duration>length) {
                     clip.close();
-                      
+                    this.length =0;
                     nbackRunning = false;
                     return;    
                 }  

@@ -19,20 +19,21 @@ public class GRUnityServer implements Runnable{
   private GRMessageBoard messageBoard;
   private ServerSocket serverSocket;
   private Socket clientSocket;
+  private Boolean open =true;
   public GRUnityServer(GRUnityServer.OnMessageListener onMessageListener, GRMessageBoard messageBoard){
     this.onMessageListener = onMessageListener;
     this.messageBoard = messageBoard;
   }
   
-  public void close() {
-      try{
-          this.serverSocket.close();
-          this.clientSocket.close();
-      }
-      catch(Exception e) {
-          
-      }
-      
+  public boolean close() {
+    if (!this.open) return false;
+    open = false;
+    try {
+        this.serverSocket.close();
+        this.clientSocket.close();
+    }
+    catch(Exception e) {e.printStackTrace();}
+    return true;
   }
 
   @Override
@@ -43,15 +44,26 @@ public class GRUnityServer implements Runnable{
         e.printStackTrace();
     }
     try {
-         this.serverSocket = new ServerSocket(PORT);
-         this.clientSocket = serverSocket.accept();
-         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-         serverSocket.setReuseAddress(true);
+        this.serverSocket = new ServerSocket(PORT);
+        System.out.println("Waiting to accept");
+        this.clientSocket = serverSocket.accept();
+        this.open = true;
+
+        System.out.println("Accepted");
+        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        serverSocket.setReuseAddress(true);
+        clientSocket.setReuseAddress(true);
+
         this.messageBoard.put("--- GRUnityServer --- Client (IP: " + clientSocket.getInetAddress().getHostAddress() + ") connected.");
         String message;
-        while((message = in.readLine()) != null){
-          this.onMessageListener.onPositionReceived(message);
+        
+        while(open &&(message = in.readLine()) != null){
+            this.onMessageListener.onPositionReceived(message);
+            if (!open) {
+                return;
+            }
         }
+        System.out.println("closing unityserver");
         this.messageBoard.put("--- GRUnityServer --- done");
     }catch(IOException e){
       e.printStackTrace();
